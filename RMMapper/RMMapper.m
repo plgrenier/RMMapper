@@ -88,7 +88,15 @@ static const char *getPropertyType(objc_property_t property) {
 
 #pragma mark - Populate object from data dictionary
 
++(id)populateObject:(id)obj fromDictionary:(NSDictionary *)dict {
+    return [RMMapper populateObject:obj fromDictionary:dict exclude:nil];
+}
+
 +(id)populateObject:(id)obj fromDictionary:(NSDictionary *)dict exclude:(NSArray *)excludeArray {
+    return [RMMapper populateObject:obj fromDictionary:dict exclude:excludeArray withClasses:nil];
+}
+
++(id)populateObject:(id)obj fromDictionary:(NSDictionary *)dict exclude:(NSArray *)excludeArray withClasses:(NSDictionary *)classes {
     if (obj == nil) {
         return nil;
     }
@@ -145,10 +153,17 @@ static const char *getPropertyType(objc_property_t property) {
         
         NSString *propertyType = [properties objectForKey:property];
         
+        if ([propertyType isEqualToString:@"NSArray"] && classes) {
+            Class cls = [classes objectForKey:property];
+            if (cls) {
+                [obj setValue:[RMMapper arrayOfClass:cls fromArrayOfDictionary:value withClasses:classes] forKey:property];
+            }
+        }
+        
         // If the property type is NSString and the value is array,
         // join them with ","
-        if ([propertyType isEqualToString:@"NSString"] \
-            && [value isKindOfClass:[NSArray class]]) {
+        else if ([propertyType isEqualToString:@"NSString"] \
+                 && [value isKindOfClass:[NSArray class]]) {
             NSArray* arr = (NSArray*) value;
             NSString* arrString = [arr componentsJoinedByString:@","];
             [obj setValue:arrString forKey:dataKey];
@@ -181,18 +196,14 @@ static const char *getPropertyType(objc_property_t property) {
     return obj;
 }
 
-
-+(id)populateObject:(id)obj fromDictionary:(NSDictionary *)dict {
-    obj = [RMMapper populateObject:obj fromDictionary:dict exclude:nil];
-    
-    return obj;
++ (id)objectWithClass:(Class)cls fromDictionary:(NSDictionary *)dict {
+    return [self objectWithClass:cls fromDictionary:dict withClasses:nil];
 }
 
-
-+ (id)objectWithClass:(Class)cls fromDictionary:(NSDictionary *)dict {
++ (id)objectWithClass:(Class)cls fromDictionary:(NSDictionary *)dict withClasses:(NSDictionary *)classes {
     id obj = [[cls alloc] init];
     
-    [RMMapper populateObject:obj fromDictionary:dict];
+    [RMMapper populateObject:obj fromDictionary:dict exclude:nil withClasses:classes];
     
     return obj;
 }
@@ -200,14 +211,21 @@ static const char *getPropertyType(objc_property_t property) {
 #pragma mark - Populate array of class from data array
 
 +(NSArray *)arrayOfClass:(Class)cls fromArrayOfDictionary:(NSArray *)array {
-    NSMutableArray *mutableArray = [RMMapper mutableArrayOfClass:cls fromArrayOfDictionary:array];
+    return [self arrayOfClass:cls fromArrayOfDictionary:array withClasses:nil];
+}
+
++(NSArray *)arrayOfClass:(Class)cls fromArrayOfDictionary:(NSArray *)array withClasses:(NSDictionary *)classes {
+    NSMutableArray *mutableArray = [RMMapper mutableArrayOfClass:cls fromArrayOfDictionary:array withClasses:classes];
     
     NSArray *arrWithClass = [NSArray arrayWithArray:mutableArray];
     return arrWithClass;
 }
 
 +(NSMutableArray *)mutableArrayOfClass:(Class)cls fromArrayOfDictionary:(NSArray *)array {
-    
+    return [self mutableArrayOfClass:cls fromArrayOfDictionary:array withClasses:nil];
+}
+
++(NSMutableArray *)mutableArrayOfClass:(Class)cls fromArrayOfDictionary:(NSArray *)array withClasses:(NSDictionary *)classes {
     if (!array) {
         return nil;
     }
@@ -223,7 +241,7 @@ static const char *getPropertyType(objc_property_t property) {
         }
         
         // Convert item dictionary to object with predefined class
-        id obj = [RMMapper objectWithClass:cls fromDictionary:item];
+        id obj = [RMMapper objectWithClass:cls fromDictionary:item withClasses:classes];
         [mutableArray addObject:obj];
     }
     

@@ -31,11 +31,13 @@
  */
 + (id) populateObject:(id)obj fromDictionary:(NSDictionary*)dict;
 + (id) populateObject:(id)obj fromDictionary:(NSDictionary*)dict exclude:(NSArray*)excludeArray;
++ (id) populateObject:(id)obj fromDictionary:(NSDictionary *)dict exclude:(NSArray *)excludeArray withClasses:(NSDictionary *)classes;
 
 
 /** Create a new object with given class and populate it with value from dictionary
  */
 + (id) objectWithClass:(Class)cls fromDictionary:(NSDictionary*)dict;
++ (id) objectWithClass:(Class)cls fromDictionary:(NSDictionary *)dict withClasses:(NSDictionary *)classes;
 
 /** Convert an object to a dictionary
  */
@@ -48,6 +50,8 @@
 /** Convert an array of dict to array of object with predefined class
  */
 + (NSArray*) arrayOfClass:(Class)cls fromArrayOfDictionary:(NSArray*)array;
++ (NSArray *)arrayOfClass:(Class)cls fromArrayOfDictionary:(NSArray *)array withClasses:(NSDictionary *)classes;
 + (NSMutableArray*) mutableArrayOfClass:(Class)cls fromArrayOfDictionary:(NSArray*)array;
++ (NSMutableArray *)mutableArrayOfClass:(Class)cls fromArrayOfDictionary:(NSArray *)array withClasses:(NSDictionary *)classes;
 
 @end
